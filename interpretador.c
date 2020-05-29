@@ -3,97 +3,62 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <ctype.h>
 
+#include "interpretador.h"
+#include "config.h"
+#include "tarefa.h"
 
-#define MAX 256
+#define ERROR_MAX 100
 
-int interpreter(char *line, int n) {
-	int status, i = 0, j;
-	char *cmd, *args[MAX][MAX],ncomandos = 0;
+int isNumeric(char *s) {
 
-	char *token = strtok(line, " ");
+	int i;
 
+	for (i = 0; s[i]; i++)
+		if (!isdigit(s[i]))
+			return 0;
 
-	if (!token) return 0;
+	return 1;
+}
 
-	cmd = token;
+int getParameter(char *token, int *parameter, char errors[][ERROR_MAX]) {
 
-	if(!strcmp("exit", cmd)) return 0;
+	if (token != NULL) {
 
-	while(token) {
+		if (!isNumeric(token) || ((*parameter = atoi(token)) <= 0)) {
 
-		if (!strcmp("|", token)) {
-			args[ncomandos][i] = NULL;
-			i = 0;
-			ncomandos++;
-		} else {
-
-			args[ncomandos][i++] = token;
-
+			write(1, "Erro: Parâmetro inválido.\n", 28);
+			write(1, errors[1], strlen(errors[1]) + 6);
+			return 0;
 		}
-
-		token = strtok(NULL, " ");
-	}
-
-	args[ncomandos++][i] = NULL;
-
-	if (!strcmp("cd", cmd)) {
-		chdir(args[0][1]);
 
 	} else {
 
-		int fds[ncomandos-1][2];
-
-		for(i = 0; i < ncomandos - 1; i++)
-			pipe(fds[i]);
-
-		for(i = 0; i < ncomandos; i++) {
-
-			if (fork() == 0) {
-
-				if (i == 0) {
-					
-					dup2(fds[i][1], 1);
-				} else {
-					if (i == ncomandos - 1) {
-				
-						dup2(fds[i-1][0], 0);
-					} else {
-				
-						dup2(fds[i-1][0], 0);  
-						dup2(fds[i][1], 1);
-					}
-				}
-
-				for(j = 0; j < ncomandos - 1; j++) {
-
-					close(fds[j][0]);
-					close(fds[j][1]);
-				}
-						
-				execvp(args[i][0], args[i]);
-			}
-		}
-
-		for(j = 0; j < ncomandos - 1; j++) {
-
-			close(fds[j][0]);
-			close(fds[j][1]);
-		}
-
-		while(waitpid(-1, NULL, 0) != -1);
+		write(1, "Erro: Falta o parâmetro de tempo.\n", 35);
+		write(1, errors[0], strlen(errors[0]) + 6);
+		return 0;
 	}
 
-	waitpid(-1, &status, 0);
-
-	return n;
+	return 1;
 }
 
 
-int main() {
 
-	char buffer[MAX];
-	int n;
+
+
+int shell(int server) {
+
+	char buffer[MAX], *token;
+	int n, o;
+	Tarefa t;
+
+	char errors[2][ERROR_MAX] = {
+		"      > tempo-inactividade <segundos>\n", 
+		"      Insira um valor numérico maior que zero (0)\n"
+	};
+
+
 
 	do {
 
@@ -102,16 +67,51 @@ int main() {
 
 		buffer[n-1] = '\0';
 
-		if (buffer[n-2] == '&') {
-
-			buffer[n-2] = '\0';
-
-			if(!fork()) n = interpreter(buffer, n);
-
-		} else n = interpreter(buffer, n);
+		token = strtok(buffer, " ");
 
 
-	} while (n>0);
+		if (!strcmp(token, "tempo-inactividade")) {
+
+			token = strtok(NULL, " ");
+
+			if (getParameter(token, &o, errors)) {
+
+				send_conf(server, create_conf(CONFIG_INAC_TIME, o));
+
+			}
+
+		}
+
+
+		if (!strcmp(token, "executar")) {
+
+			token = strtok(NULL, "'");
+
+			if (token) {
+
+				send_conf(server, create_conf(CONFIG_EXEC, 0));
+
+				Tarefa t = createTarefa(token);
+				write(server, &t, sizeof(Tarefa));
+
+			} else {
+
+				// TODO: Mensagem de erro.
+			}
+
+		}
+
+		if (!strcmp(token, "listar")) {
+
+			token = strtok(NULL, "'");
+
+			send_conf(server, create_conf(CONFIG_LIST, 0));
+
+		}
+
+
+
+	} while (strcmp(buffer, "exit"));
 
 	return 0;
 }
