@@ -44,9 +44,6 @@ int getParameter(char *token, int *parameter, char errors[][ERROR_MAX]) {
 }
 
 
-
-
-
 int shell(int server) {
 
 	char buffer[MAX], *token;
@@ -57,8 +54,6 @@ int shell(int server) {
 		"      > tempo-inactividade <segundos>\n", 
 		"      Insira um valor numérico maior que zero (0)\n"
 	};
-
-
 
 	do {
 
@@ -82,6 +77,21 @@ int shell(int server) {
 
 		}
 
+		if (!strcmp(token,"tempo-execucao")) {
+
+			token = strtok(NULL," ");
+
+			if (token!=NULL) {
+
+				//false tratar isto                            aqui
+				send_conf(server, create_conf(CONFIG_EXEC_TIME, o));
+
+			} else {
+
+				write(1,"Comando invalido!",18);
+			}
+		}
+
 
 		if (!strcmp(token, "executar")) {
 
@@ -96,9 +106,9 @@ int shell(int server) {
 
 			} else {
 
-				// TODO: Mensagem de erro.
-			}
+				write(1,"Comando invalido!",18);
 
+			}
 		}
 
 		if (!strcmp(token, "listar")) {
@@ -109,7 +119,34 @@ int shell(int server) {
 
 		}
 
+		if (!strcmp(token,"historico")) {
 
+			send_conf(server, create_conf(CONFIG_HIST, 0));
+
+		}
+
+		if (!strcmp(token,"terminar")) {
+
+			token = strcmp(NULL," ");
+
+			if (token!=NULL) {
+
+				int id = atoi(token);
+
+				send_conf(server,create_conf(CONFIG_KILL,0));
+
+			} else {
+
+				write(1,"Comando invalido!",18);
+
+			}
+		}
+
+		if (!strcmp(token,"ajuda")) {
+
+			send_conf(server,create_conf(CONFIG_HELP,0));
+
+		}
 
 	} while (strcmp(buffer, "exit"));
 
