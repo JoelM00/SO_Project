@@ -127,7 +127,7 @@ int shell(int server) {
 
 		if (!strcmp(token,"terminar")) {
 
-			token = strcmp(NULL," ");
+			token = strtok(NULL," ");
 
 			if (token!=NULL) {
 
