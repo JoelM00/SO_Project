@@ -64,7 +64,6 @@ int shell(int server) {
 
 		token = strtok(buffer, " ");
 
-
 		if (!strcmp(token, "tempo-inactividade")) {
 
 			token = strtok(NULL, " ");
@@ -74,7 +73,6 @@ int shell(int server) {
 				send_conf(server, create_conf(CONFIG_INAC_TIME, o));
 
 			}
-
 		}
 
 		if (!strcmp(token,"tempo-execucao")) {
@@ -83,8 +81,9 @@ int shell(int server) {
 
 			if (token!=NULL) {
 
-				//false tratar isto                            aqui
-				send_conf(server, create_conf(CONFIG_EXEC_TIME, o));
+				int tempo = atoi(token);
+
+				send_conf(server, create_conf(CONFIG_EXEC_TIME, tempo));
 
 			} else {
 
@@ -112,8 +111,6 @@ int shell(int server) {
 		}
 
 		if (!strcmp(token, "listar")) {
-
-			token = strtok(NULL, "'");
 
 			send_conf(server, create_conf(CONFIG_LIST, 0));
 

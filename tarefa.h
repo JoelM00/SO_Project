@@ -4,6 +4,8 @@
 #define MAX_COMANDOS 10
 #define MAX_COMANDO_SIZE 255
 
+typedef enum {WAITING, RUNNING, TERMINATED} Estado;
+
 typedef struct _TAREFA_ {
 	int id; // ID da tarefa
 
@@ -12,6 +14,8 @@ typedef struct _TAREFA_ {
 
 	int fds[MAX_COMANDOS - 1][2];
 	pid_t pids[MAX_COMANDOS];
+
+	Estado estado;
 
 
 

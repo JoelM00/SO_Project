@@ -63,11 +63,11 @@ void showTarefa(Tarefa t)
 {
 	int i, j;
 
-	printf("[%d] ", t.id);
+	printf("[%d] S=%d ", t.id, t.estado);
 
 	for (i = 0; i < t.ncomandos; i++) {
 
-		printf("%s ", t.comandos[i]);
+		printf("%s [%d]", t.comandos[i], t.pids[i]);
 		
 		if (i < t.ncomandos - 1) printf(">");
 	}
