@@ -9,8 +9,8 @@
 
 #include "tarefa.h"
 #include "interpretador.h"
+#include "config.h"
 
-//#define MAX 1024
 
 int main(int argc, char* argv[]) 
 {
@@ -20,12 +20,60 @@ int main(int argc, char* argv[])
 	char buffer[MAX];
 	int n;
 
+	if (argc > 1) {
 
-	/*Tarefa t1 = createTarefa(argv[1]);
+		if (!strcmp(argv[1],"-i")) {
 
-	write(fd, &t1, sizeof(Tarefa));*/
 
-	shell(fd);
+		}
+
+		if (!strcmp(argv[1],"-m")) {
+
+
+		}
+
+		if (!strcmp(argv[1],"-e")) {
+
+			send_conf(fd, create_conf(CONFIG_EXEC, 0));
+
+			Tarefa t = createTarefa(argv[2]);
+
+			write(fd, &t, sizeof(Tarefa));
+
+		}
+
+		if (!strcmp(argv[1],"-l")) {
+
+			send_conf(fd, create_conf(CONFIG_LIST, 0));
+
+			return 0;
+		}
+
+		if (!strcmp(argv[1],"-t")) {
+
+			send_conf(fd, create_conf(CONFIG_KILL, 0));
+
+			return 0;
+		}
+
+		if (!strcmp(argv[1],"-r")) {
+
+			send_conf(fd, create_conf(CONFIG_HIST, 0));
+
+			return 0;
+		}
+
+		if (!strcmp(argv[1],"-h")) {
+
+			help();
+
+			return 0;
+		}
+
+	} else {
+		
+		shell(fd);
+	}
 
 	close(fd);
 

@@ -43,6 +43,16 @@ int getParameter(char *token, int *parameter, char errors[][ERROR_MAX]) {
 	return 1;
 }
 
+int help() {
+	write(1,"tempo-inactividade <segs>\n",26);
+	write(1,"tempo-execucao <segs>\n",22);
+	write(1,"executar 'cmd1 | cmd2 ... cmdn'\n",31);
+	write(1,"listar\n",7);
+	write(1,"historico\n",10);
+	write(1,"terminar\n",9);
+}
+
+
 
 int shell(int server) {
 
@@ -141,8 +151,7 @@ int shell(int server) {
 
 		if (!strcmp(token,"ajuda")) {
 
-			send_conf(server,create_conf(CONFIG_HELP,0));
-
+			help();
 		}
 
 	} while (strcmp(buffer, "exit"));

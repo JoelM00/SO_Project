@@ -6,5 +6,7 @@
 
 
 int shell();
+int help();
+
 
 #endif

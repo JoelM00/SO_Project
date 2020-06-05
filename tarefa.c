@@ -11,8 +11,6 @@ char *** createExecArray(Tarefa t)
 	int i, j;
 	char ***args, *token, ncomandos = 0;
 
-
-	// ls -la | wc
 	args = (char***) malloc(sizeof(char**) * t.ncomandos);
 
 	for (i = 0; i < t.ncomandos; i++) {
@@ -63,7 +61,7 @@ void showTarefa(Tarefa t)
 {
 	int i, j;
 
-	printf("[%d] S=%d ", t.id, t.estado);
+	printf("ID:%d Estado=%d ", t.id, t.estado);
 
 	for (i = 0; i < t.ncomandos; i++) {
 

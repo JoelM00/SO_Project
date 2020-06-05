@@ -33,17 +33,13 @@ int main() {
 
 	mkfifo("./myfifo", 0600);
 
-
-
-
 	int fd = open("./myfifo",O_RDONLY);
-
 
 	while(1) {
 
 		while ((n = read(fd, &conf,sizeof(Config))) > 0) {
 
-			printf(">%d %d\n", conf.cmd, conf.option);
+			//printf(">%d %d\n", conf.cmd, conf.option);
 
 			if (conf.cmd == CONFIG_EXEC) {
 
@@ -64,14 +60,6 @@ int main() {
 
 			}
 
-			if (conf.cmd == CONFIG_LIST) {
-
-				showTarefasEmExecucao();
-
-				//showTarefas();
-			
-			}
-
 			if (conf.cmd == CONFIG_INAC_TIME) {
 
 				tempo_inacticidade = conf.option;
@@ -84,14 +72,14 @@ int main() {
 
 				tempo_execucao = conf.option;
 
-
-
 			}
-
 
 			if (conf.cmd == CONFIG_LIST) {
 
+				showTarefasEmExecucao();
 
+				//showTarefas();
+			
 			}
 
 
@@ -106,22 +94,13 @@ int main() {
 							kill(tarefas[i].pids[j], SIGQUIT);
 
 						}
-
-
 					}
 				} 
-
-
 			}
 
 			if (conf.cmd == CONFIG_HIST) {
 
-
-			}
-
-			if (conf.cmd == CONFIG_HELP) {
-
-
+				printf("Ola!\n");
 
 			}
 		}
@@ -136,7 +115,7 @@ void showTarefas()
 	int i;
 
 
-	printf("\n-----------------------------\n");
+	printf("\n--------------------------------------\n");
 	printf("Lista de tarefas:\n\n");
 
 	for (i = 0; i < ntarefas && i < MAX_TAREFAS; i++) {
@@ -145,7 +124,7 @@ void showTarefas()
 
 	}
 
-	printf("\n-----------------------------\n");
+	printf("\n--------------------------------------\n");
 
 }
 
@@ -156,7 +135,7 @@ void showTarefasEmExecucao()
 	int i;
 
 
-	printf("\n-----------------------------\n");
+	printf("\n--------------------------------------\n");
 	printf("Lista de tarefas (em execução):\n\n");
 
 	for (i = 0; i < ntarefas && i < MAX_TAREFAS; i++) {
@@ -165,7 +144,7 @@ void showTarefasEmExecucao()
 			showTarefa(tarefas[i]);
 	}
 
-	printf("\n-----------------------------\n");
+	printf("\n--------------------------------------\n");
 
 }
 
@@ -220,15 +199,17 @@ void executarTarefa(Tarefa *t)
 			
 			
 			// Executar o comando.
-			if (i == t->ncomandos - 1 && fork()==0) execvp(argv[i][0], argv[i]);
+			//if (i == t->ncomandos - 1 && fork()==0) 
+				execvp(argv[i][0], argv[i]);
 
+/*
 			alarm(3);
 			printf("OKKO!!!");
 
 			wait(NULL);
-			printf("OK!!!");
+			printf("OK!!!");*/
 
-			t->estado = TERMINATED;
+			//t->estado = TERMINATED;
 
 		} else {
 			printf("PID: %d\n", t->pids[i]);
