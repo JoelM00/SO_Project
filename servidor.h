@@ -8,5 +8,6 @@
 void showTarefas();
 void executarTarefa(Tarefa*);
 void showTarefasEmExecucao();
+void showTarefasTerminadas();
 
 #endif

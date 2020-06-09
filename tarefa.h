@@ -14,11 +14,11 @@ typedef struct _TAREFA_ {
 
 	int fds[MAX_COMANDOS - 1][2];
 	pid_t pids[MAX_COMANDOS];
+	int terminated_pids;
+
+	int ttl;
 
 	Estado estado;
-
-
-
 
 } Tarefa;
 

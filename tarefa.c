@@ -46,6 +46,7 @@ Tarefa createTarefa(char * line)
 
 	nova.id = -1;
 	nova.ncomandos = 0;
+	nova.terminated_pids = 0;
 
 	while (token) {
 
