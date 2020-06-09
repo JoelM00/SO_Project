@@ -64,7 +64,9 @@ void sigchld_handler(int signum) {
  	int     stat;
 
  	pid = wait(&stat);
- 	printf("child %d terminated %d %d\n", pid, WIFEXITED(stat),WEXITSTATUS(stat));
+ 	if (WIFEXITED(stat)) {
+ 		printf("Filho %d terminou normalmente! %d\n", pid,WEXITSTATUS(stat));
+ 	} else printf("Filho %d foi morto! %d\n", pid,WEXITSTATUS(stat));
 
 
  	for (i = 0; i < ntarefas; i++) {
@@ -144,8 +146,6 @@ int main() {
 			if (conf.cmd == CONFIG_LIST) {
 
 				showTarefasEmExecucao();
-
-				//showTarefas();
 			
 			}
 
@@ -239,12 +239,6 @@ void showTarefasEmExecucao()
 
 
 
-
-
-
-
-
-
 // Executar uma tarefa
 void executarTarefa (Tarefa *t) {
 
@@ -289,8 +283,6 @@ void executarTarefa (Tarefa *t) {
 				close(t->fds[j][1]);
 			}
 
-			sleep(50);
-
     		execvp(argv[i][0], argv[i]); // Executar o comando.
 		}
 	}
@@ -302,6 +294,4 @@ void executarTarefa (Tarefa *t) {
 		close(t->fds[i][1]);
 	}
 
-	//printf("TERM\n");
-	//t->estado = TERMINATED;
 }
