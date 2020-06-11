@@ -7,14 +7,14 @@
 typedef enum {WAITING, RUNNING, TERMINATED} Estado;
 
 typedef struct _TAREFA_ {
-	int id; // ID da tarefa
+	int id;                                        // ID da tarefa
 
 	char comandos[MAX_COMANDOS][MAX_COMANDO_SIZE]; // Comandos a executar
-	int ncomandos; // Número de comandos a executar.
+	int ncomandos;                                 // Número de comandos a executar.
 
-	int fds[MAX_COMANDOS - 1][2];
-	pid_t pids[MAX_COMANDOS];
-	int terminated_pids;
+	int fds[MAX_COMANDOS - 1][2];                   // Número de comandos a executar.
+	pid_t pids[MAX_COMANDOS];                       // Número de comandos a executar.
+	int terminated_pids;                            // Número de comandos a executar.
 
 	int ttl;
 
