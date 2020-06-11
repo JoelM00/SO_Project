@@ -140,7 +140,7 @@ int shell(int server) {
 
 				int id = atoi(token);
 
-				send_conf(server,create_conf(CONFIG_KILL,0));
+				send_conf(server,create_conf(CONFIG_KILL,id));
 
 			} else {
 
