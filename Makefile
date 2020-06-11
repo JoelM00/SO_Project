@@ -36,3 +36,5 @@ config.o: config.c config.h
 
 clean:
 	rm -rf *.o $(SERVER) $(CLIENT) logs.txt *~ myfifo
+	rm -f output
+	rm -f terminadas

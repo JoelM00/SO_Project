@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <signal.h>
 #include <sys/wait.h>
 
@@ -12,9 +11,14 @@
 #include "tarefa.h"
 #include "config.h"
 
-static int tempo_inacticidade = 10;
-static int tempo_execucao = 2;
+#define FIFO_FD "myfifo"
+#define TERMINADAS_FD "terminadas"
+#define OUTPUT_FD "output"
 
+static int tempo_inactividade = 10;
+static int tempo_execucao = 10;
+
+static int idTarefa = 0;
 
 static Tarefa tarefas[MAX_TAREFAS];
 static int ntarefas = 0;
@@ -26,14 +30,11 @@ void timeout_handler (int signum) {
 
 	int i, j;
 
-	//showTarefas();
-
-
 	for (i = 0; i < ntarefas; i++) {
 
 		if ( tarefas[i].estado != TERMINATED && tarefas[i].ttl <= 0) {
 
-			for(j = 0; j < tarefas[i].ncomandos; j++) {
+			for (j = 0; j < tarefas[i].ncomandos; j++) {
 
 				if (tarefas[i].pids[j] > 0) {
 
@@ -42,48 +43,39 @@ void timeout_handler (int signum) {
 				}
 			}
 
-			tarefas[i].estado = TERMINATED;
+			tarefas[i].estado = MAX_EXECUCAO;
 			printf("TERMINOU TAREFA %d %d\n", i, tarefas[i].estado);
 
-		} else {
-
-			tarefas[i].ttl--;
-		}
+		} 
+		else tarefas[i].ttl--;
 	}
 
-
 	alarm(1);
-
-
 }
 
-void sigchld_handler(int signum) {
+
+void sigchld_handler (int signum) {
 
 	int i, j;
-	pid_t   pid;
- 	int     stat;
+	pid_t pid;
+ 	int stat;
 
  	pid = wait(&stat);
- 	if (WIFEXITED(stat)) {
- 		printf("Filho %d terminou normalmente! %d\n", pid,WEXITSTATUS(stat));
- 	} else printf("Filho %d foi morto! %d\n", pid,WEXITSTATUS(stat));
 
+ 	if (WIFEXITED(stat)) printf("Filho %d terminou normalmente! %d\n", pid,WEXITSTATUS(stat));
+	else printf("Filho %d foi morto! %d\n", pid,WEXITSTATUS(stat));
 
  	for (i = 0; i < ntarefas; i++) {
 
- 		for( j = 0; j < tarefas[i].ncomandos; j++) {
+ 		for (j = 0; j < tarefas[i].ncomandos; j++) {
 
- 			if (pid == tarefas[i].pids[j])
- 				tarefas[i].terminated_pids++;
+ 			if (pid == tarefas[i].pids[j]) tarefas[i].terminated_pids++;
  		}
 
- 		if (tarefas[i].terminated_pids >= tarefas[i].ncomandos)
- 			tarefas[i].estado = TERMINATED;
-
+ 		if (tarefas[i].terminated_pids >= tarefas[i].ncomandos) tarefas[i].estado = TERMINATED;
  	}
 
-    
-    return;
+	return;
 }
 
 
@@ -93,10 +85,10 @@ int main() {
 	Config conf;
 	int n, i, j;
 
-	mkfifo("./myfifo", 0600);
-
-	int fd = open("./myfifo",O_RDONLY);
-
+	mkfifo(FIFO_FD, 0600);
+	int fd = open(FIFO_FD, O_RDONLY);
+	int fd_terminadas = open(TERMINADAS_FD, O_CREAT | O_APPEND | O_WRONLY, 0600);
+	int fd_output = open(OUTPUT_FD, O_CREAT | O_APPEND | O_WRONLY, 0600);
 
 	signal(SIGCHLD, sigchld_handler);
 	signal(SIGALRM, timeout_handler);
@@ -106,49 +98,51 @@ int main() {
 
 		while ((n = read(fd, &conf,sizeof(Config))) > 0) {
 
-			//printf(">%d %d\n", conf.cmd, conf.option);
+			// executar uma tarefa 
 
 			if (conf.cmd == CONFIG_EXEC) {
 
 				if ((n = read(fd, &t,sizeof(Tarefa))) > 0) {
 
-					t.id = ntarefas;
-					printf("WAIT\n");
-					t.estado = WAITING;
-					t.ttl = tempo_execucao;
-					tarefas[ntarefas++] = t;
+					if (ntarefas < MAX_TAREFAS){
 
-				
-					executarTarefa(&tarefas[ntarefas-1]);
-					
+						t.id = idTarefa;
+						idTarefa++;
+						t.estado = WAITING;
+						t.ttl = tempo_execucao;
+						tarefas[ntarefas++] = t;
 
-				} else {
+						executarTarefa(&tarefas[ntarefas-1]);
 
-					write(1,"Tarefa nao recebida",20);
-				}
-
+						if (t.estado == RUNNING) t.estado = TERMINATED;
+						write(fd_terminadas, &t, sizeof(Tarefa));
+					}
+					else write(1, "Limite de tarefas atingido\n", 28);
+				} 
+				else write(1,"Tarefa não recebida",20);
 			}
+
+			// definir o tempo máximo (segundos) de inactividade de comunicação num pipe anónimo
 
 			if (conf.cmd == CONFIG_INAC_TIME) {
-
-				tempo_inacticidade = conf.option;
-
-
-
+				tempo_inactividade = conf.option;
+				write(fd_output, "tempo de inactividade atualizado.\n", 35);
 			}
+
+			// definir o tempo máximo (segundos) de execução de uma tarefa
 
 			if (conf.cmd == CONFIG_EXEC_TIME) {
-
 				tempo_execucao = conf.option;
-
+				write(fd_output, "tempo de execução atualizado.\n", 32);
 			}
+
+			// listar tarefas em execução
 
 			if (conf.cmd == CONFIG_LIST) {
-
 				showTarefasEmExecucao();
-			
 			}
 
+			// terminar uma tarefa em execução
 
 			if (conf.cmd == CONFIG_KILL) {
 
@@ -158,9 +152,7 @@ int main() {
 
 						for (j = 0; j < tarefas[i].ncomandos; j++) {
 
-							if (tarefas[i].pids[j]>-1) {
-								kill(tarefas[i].pids[j], SIGKILL);
-							}
+							if (tarefas[i].pids[j]>-1) kill(tarefas[i].pids[j], SIGKILL);
 						}
 
 						tarefas[i].estado = TERMINATED;
@@ -168,73 +160,72 @@ int main() {
 				} 
 			}
 
-			if (conf.cmd == CONFIG_HIST) {
+			// listar registo histórico de tarefas terminadas
 
+			if (conf.cmd == CONFIG_HIST) {
 				showTarefasTerminadas();
-			
 			}
 		}
 	}
 
 	close(fd);
+	close(fd_terminadas);
+	close(fd_output);
 }
 
 
-void showTarefas()
-{
-	int i;
-
+void showTarefas () {
 
 	printf("\n--------------------------------------\n");
 	printf("Lista de tarefas:\n\n");
 
-	for (i = 0; i < ntarefas && i < MAX_TAREFAS; i++) {
-
+	for (int i = 0; i < ntarefas && i < MAX_TAREFAS; i++) {
 		showTarefa(tarefas[i]);
-
 	}
 
 	printf("\n--------------------------------------\n");
-
 }
 
 
-void showTarefasTerminadas()
-{
-	int i;
-
+int showTarefasTerminadas() {
 
 	printf("\n--------------------------------------\n");
 	printf("Lista de tarefas (terminadas):\n\n");
 
-	for (i = 0; i < ntarefas && i < MAX_TAREFAS && tarefas[i].estado==TERMINATED; i++) {
+	int fd = open(TERMINADAS_FD, O_RDONLY, 0600);
+    
+	if (fd < 0){
+        write(1, "error opening file\n", 20);
+        return -1;
+    }
 
-		//if (tarefas[i].estado == RUNNING)
-			showTarefa(tarefas[i]);
+	Tarefa t;
+	int bytes_read;
+
+	while ((bytes_read = read(fd, &t, sizeof(Tarefa))) > 0){
+		showTarefa(t);
 	}
+
+	close(fd);
 
 	printf("\n--------------------------------------\n");
 
+	return 0;
 }
 
 
 
-void showTarefasEmExecucao()
-{
-	int i;
-
+void showTarefasEmExecucao() {
 
 	printf("\n--------------------------------------\n");
 	printf("Lista de tarefas (em execução):\n\n");
 
-	for (i = 0; i < ntarefas && i < MAX_TAREFAS && tarefas[i].estado==1; i++) {
+	for (int i = 0; i < ntarefas && i < MAX_TAREFAS; i++) {
 
-		//if (tarefas[i].estado == RUNNING)
-			showTarefa(tarefas[i]);
+		if (tarefas[i].estado == RUNNING) showTarefa(tarefas[i]);
 	}
 
 	printf("\n--------------------------------------\n");
-
 }
 
 
@@ -251,7 +242,6 @@ void executarTarefa (Tarefa *t) {
         exit(-1);
     }
 
-	printf("RUN\n");
 	t->estado = RUNNING;
 
 	// Iniciar os pipes necessários.
@@ -259,11 +249,9 @@ void executarTarefa (Tarefa *t) {
 		pipe(t->fds[i]);
 	}
 
-	
 	for (int i = 0; i < t->ncomandos; i++) {
 
 		if ((t->pids[i] = fork()) == 0){
-
 
 			// Configurar os inputs/outputs de cada processo
 
@@ -293,5 +281,4 @@ void executarTarefa (Tarefa *t) {
 		close(t->fds[i][0]);
 		close(t->fds[i][1]);
 	}
-
 }

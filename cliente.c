@@ -11,6 +11,8 @@
 #include "interpretador.h"
 #include "config.h"
 
+#define OUTPUT_FD "output"
+
 
 int main(int argc, char* argv[]) 
 {
@@ -22,58 +24,46 @@ int main(int argc, char* argv[])
 
 	if (argc > 1) {
 
-		if (!strcmp(argv[1],"-i")) {
-
-
+		if (strcmp(argv[1],"-i") == 0) {
+			int option = atoi(argv[2]);
+			if (option > 0) send_conf(fd, create_conf(CONFIG_INAC_TIME, option));
+			else write(1, "valor inválido!\n", 17);
 		}
 
-		if (!strcmp(argv[1],"-m")) {
-
-
+		else if (strcmp(argv[1],"-m") == 0) {
+			int option = atoi(argv[2]);
+			if (option > 0) send_conf(fd, create_conf(CONFIG_EXEC_TIME, option));
+			else write(1, "valor inválido!\n", 17);
 		}
 
-		if (!strcmp(argv[1],"-e")) {
-
+		else if (strcmp(argv[1],"-e") == 0) {
 			send_conf(fd, create_conf(CONFIG_EXEC, 0));
-
 			Tarefa t = createTarefa(argv[2]);
-
 			write(fd, &t, sizeof(Tarefa));
-
 		}
 
-		if (!strcmp(argv[1],"-l")) {
-
+		else if (strcmp(argv[1],"-l") == 0) {
 			send_conf(fd, create_conf(CONFIG_LIST, 0));
-
 			return 0;
 		}
 
-		if (!strcmp(argv[1],"-t")) {
-
+		else if (strcmp(argv[1],"-t") == 0) {
 			send_conf(fd, create_conf(CONFIG_KILL, 0));
-
 			return 0;
 		}
 
-		if (!strcmp(argv[1],"-r")) {
-
+		else if (strcmp(argv[1],"-r") == 0) {
 			send_conf(fd, create_conf(CONFIG_HIST, 0));
-
 			return 0;
 		}
 
-		if (!strcmp(argv[1],"-h")) {
-
+		else if (strcmp(argv[1],"-h") == 0) {
 			help();
-
 			return 0;
 		}
 
-	} else {
-		
-		shell(fd);
-	}
+	} 
+	else shell(fd);
 
 	close(fd);
 

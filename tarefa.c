@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "tarefa.h"
 
@@ -58,25 +59,37 @@ Tarefa createTarefa(char * line)
 }
 
 
-void showTarefa(Tarefa t) 
-{
-	int i, j;
+void showTarefa(Tarefa t) {
 
-	printf("ID:%d Estado=%d ", t.id, t.estado);
+	//write(1, "#", 2);
+	int x = t.id;
+	printf("%s\n", "#");
+	printf("%d\n", x);
+	//write(1, &x, sizeof(x));
+	//write(1, "\n", 2);
 
-	for (i = 0; i < t.ncomandos; i++) {
+	char* buffer = (char*)malloc(MAX * sizeof(char));
+	
+	if (t.estado == WAITING) strcat(buffer, " em espera: ");
+	else if (t.estado == RUNNING) strcat(buffer, " em execução: ");
+	else if (t.estado == TERMINATED) strcat(buffer, " concluída: ");
+	else if (t.estado == MAX_INATIVIDADE) strcat(buffer, " max inactividade: ");
+	else if (t.estado == MAX_EXECUCAO) strcat(buffer, " max execução: ");
 
-		printf("%s [%d]", t.comandos[i], t.pids[i]);
-		
-		if (i < t.ncomandos - 1) printf(">");
+	for (int i = 0; i < t.ncomandos - 1; i++) {
+		strcat(buffer, t.comandos[i]);
+		strcat(buffer, "|");
 	}
+	strcat(buffer, t.comandos[t.ncomandos-1]);
+	strcat(buffer, "\n");
+	//write(1, &buffer, strlen(buffer) + 1);
+	printf("%s\n", buffer);
 
-	printf("\n");
+	free(buffer);
 }
 
 
-void showExecArray(char *** array, int n)
-{
+void showExecArray(char *** array, int n) {
 	int i, j;
 
 	for(i = 0; i < n; i++) {
