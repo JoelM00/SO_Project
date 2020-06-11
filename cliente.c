@@ -11,8 +11,6 @@
 #include "interpretador.h"
 #include "config.h"
 
-#define OUTPUT_FD "output"
-
 
 int main(int argc, char* argv[]) 
 {
@@ -48,7 +46,8 @@ int main(int argc, char* argv[])
 		}
 
 		else if (strcmp(argv[1],"-t") == 0) {
-			send_conf(fd, create_conf(CONFIG_KILL, 0));
+			int id = atoi(argv[2]);
+			send_conf(fd, create_conf(CONFIG_KILL, id));
 			return 0;
 		}
 

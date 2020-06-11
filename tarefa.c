@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "tarefa.h"
 
@@ -59,33 +60,58 @@ Tarefa createTarefa(char * line)
 }
 
 
-void showTarefa(Tarefa t) {
 
-	//write(1, "#", 2);
-	int x = t.id;
-	printf("%s\n", "#");
-	printf("%d\n", x);
-	//write(1, &x, sizeof(x));
-	//write(1, "\n", 2);
+// Converte um inteiro para um char*
+char* toString (int n){
 
 	char* buffer = (char*)malloc(MAX * sizeof(char));
-	
-	if (t.estado == WAITING) strcat(buffer, " em espera: ");
-	else if (t.estado == RUNNING) strcat(buffer, " em execução: ");
-	else if (t.estado == TERMINATED) strcat(buffer, " concluída: ");
-	else if (t.estado == MAX_INATIVIDADE) strcat(buffer, " max inactividade: ");
-	else if (t.estado == MAX_EXECUCAO) strcat(buffer, " max execução: ");
 
-	for (int i = 0; i < t.ncomandos - 1; i++) {
-		strcat(buffer, t.comandos[i]);
-		strcat(buffer, "|");
+	if (n == 0) {
+		char c = '0';
+		strncat(buffer, &c, 1);
 	}
-	strcat(buffer, t.comandos[t.ncomandos-1]);
-	strcat(buffer, "\n");
-	//write(1, &buffer, strlen(buffer) + 1);
-	printf("%s\n", buffer);
+	else {
 
-	free(buffer);
+		char number[5];
+		int size = 0;
+
+		for (int x = n; x != 0; x /= 10){
+			number[size] = (x % 10) + '0';
+			size++;
+		}
+
+		for (int i = size - 1; i >= 0; i--){
+			strncat(buffer, &(number[i]), 1);
+		}
+	}
+
+	return buffer;
+}
+
+
+
+
+
+
+
+
+void showTarefa(Tarefa t) {
+
+	/*char* buffer = toString(t.id);
+	printf("%s\n", buffer);
+	free(buffer);*/
+
+	printf("%s", "#");
+	printf("%d:", t.id);
+	if (t.estado == WAITING) printf(" em espera: ");
+	else if (t.estado == RUNNING) printf(" em execução: ");
+	else if (t.estado == TERMINATED) printf(" concluída: ");
+	else if (t.estado == MAX_INATIVIDADE) printf(" max inactividade: ");
+	else if (t.estado == MAX_EXECUCAO) printf(" max execução: ");
+	for (int i = 0; i < t.ncomandos - 1; i++) {
+		printf("%s|", t.comandos[i]);
+	}
+	printf("%s\n", t.comandos[t.ncomandos - 1]);
 }
 
 

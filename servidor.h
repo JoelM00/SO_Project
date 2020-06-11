@@ -5,9 +5,8 @@
 
 #define MAX_TAREFAS 1024
 
-void showTarefas();
 void executarTarefa(Tarefa*);
 void showTarefasEmExecucao();
-int showTarefasTerminadas();
+void showTarefasTerminadas();
 
 #endif

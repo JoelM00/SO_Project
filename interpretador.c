@@ -84,7 +84,7 @@ int shell(int server) {
 		return -1;
 	}
 
-	while (strcmp(buffer, "exit")){
+	while (strcmp(buffer, "exit")) {
 
 		// Ler input
 
@@ -106,7 +106,7 @@ int shell(int server) {
 		}
 
 		// tempo de execução
-		if (!strcmp(token,"tempo-execucao")) {
+		else if (!strcmp(token,"tempo-execucao")) {
 
 			token = strtok(NULL," ");
 
@@ -120,7 +120,7 @@ int shell(int server) {
 		}
 
 		// executar
-		if (!strcmp(token, "executar")) {
+		else if (!strcmp(token, "executar")) {
 
 			token = strtok(NULL, "'");
 
@@ -135,7 +135,7 @@ int shell(int server) {
 		}
 
 		// listar
-		if (!strcmp(token, "listar")) {
+		else if (!strcmp(token, "listar")) {
 
 			send_conf(server, create_conf(CONFIG_LIST, 0));
 
@@ -143,7 +143,7 @@ int shell(int server) {
 		}
 
 		// histórico
-		if (!strcmp(token,"historico")) {
+		else if (!strcmp(token,"historico")) {
 
 			send_conf(server, create_conf(CONFIG_HIST, 0));
 
@@ -151,13 +151,13 @@ int shell(int server) {
 		}
 
 		// terminar
-		if (!strcmp(token,"terminar")) {
+		else if (!strcmp(token,"terminar")) {
 
 			token = strtok(NULL," ");
 
 			if (token!=NULL) {
 				int id = atoi(token);
-				send_conf(server,create_conf(CONFIG_KILL,0));
+				send_conf(server,create_conf(CONFIG_KILL,id));
 			} 
 			else write(1,"Comando invalido!",18);
 
@@ -165,7 +165,7 @@ int shell(int server) {
 		}
 
 		// ajuda
-		if (!strcmp(token,"ajuda")) {
+		else if (!strcmp(token,"ajuda")) {
 
 			help();
 
@@ -174,15 +174,17 @@ int shell(int server) {
 
 		// Ler output
 
-		if (readOutput){
+		sleep(1);
+
+		while (readOutput){
 
 			while ((bytesRead = read(fd_output, &outputBuffer, MAX_LINE_SIZE)) > 0){
         		write(1, &outputBuffer, bytesRead);
         	}
-		}
 
-		readOutput = 0;
-
+			readOutput = 0;
+			write(1, "\n", 2);
+		}	
 	}
 
 	close(fd_output);

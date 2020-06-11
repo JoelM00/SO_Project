@@ -28,6 +28,7 @@ void showTarefa(Tarefa);
 char *** createExecArray(Tarefa);
 void showExecArray(char***, int);
 
+char* toString (int);
 
 #endif
 
