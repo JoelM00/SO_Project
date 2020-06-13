@@ -7,6 +7,7 @@
 typedef enum { WAITING, RUNNING, TERMINATED, MAX_INATIVIDADE, MAX_EXECUCAO } Estado;
 
 typedef struct _TAREFA_ {
+	
 	int id; // ID da tarefa
 
 	char comandos[MAX_COMANDOS][MAX_COMANDO_SIZE]; // Comandos a executar

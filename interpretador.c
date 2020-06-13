@@ -16,7 +16,8 @@
 #define OUTPUT_FD "output"
 
 
-// Verificar se uma string é um número
+// ---------------------------------------------- verificar se uma string é um número ---------------------------------------------- \\
+
 int isNumeric(char *s) {
 
 	for (int i = 0; s[i]; i++){
@@ -26,8 +27,8 @@ int isNumeric(char *s) {
 	return 1;
 }
 
+// -------------------------------------------------------- validar o input -------------------------------------------------------- \\
 
-// Validar o input
 int getParameter(char *token, int *parameter, char errors[][ERROR_MAX]) {
 
 	if (token != NULL) {
@@ -49,8 +50,8 @@ int getParameter(char *token, int *parameter, char errors[][ERROR_MAX]) {
 	return 1;
 }
 
+// -------------------------------------------------- listar os comandos possíveis ------------------------------------------------- \\
 
-// Listar os comandos possíveis
 int help() {
 	write(1,"tempo-inactividade <segs>\n",26);
 	write(1,"tempo-execucao <segs>\n",22);
@@ -61,8 +62,8 @@ int help() {
 	return 0;
 }
 
+// ---------------------------------------------------------- modo shell ----------------------------------------------------------- \\
 
-// Modo shell
 int shell(int server) {
 
 	char buffer[MAX], *token;

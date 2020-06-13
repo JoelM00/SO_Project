@@ -19,5 +19,4 @@ typedef struct _CONFIG_ {
 Config create_conf(int, int);
 void send_conf(int, Config);
 
-
 #endif

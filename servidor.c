@@ -47,14 +47,13 @@ void timeout_handler (int signum) {
 			for (j = 0; j < tarefas[i].ncomandos; j++) {
 
 				if (tarefas[i].pids[j] > 0) {
-					//printf("A matar %d\n", tarefas[i].pids[j]);
+					write(1, "A matar tarefa\n", 15);
 					kill(tarefas[i].pids[j], SIGKILL);
 				}
 			}
 
 			tarefas[i].estado = MAX_EXECUCAO;
-			//printf("TERMINOU TAREFA %d %d\n", i, tarefas[i].estado);
-
+			write(1, "Tarefa terminada\n", 18);
 		} 
 		else tarefas[i].ttl--;
 	}
@@ -102,6 +101,7 @@ int main() {
 	int n, i, j;
 
 	mkfifo(FIFO_FD, 0600);
+	mkfifo(OUTPUT_FD, 0600);
 
 	mkfifo(FIFO_FD, 0600);
 	int fd = open(FIFO_FD, O_RDONLY);
@@ -232,8 +232,8 @@ void showTarefasEmExecucao () {
 	close(fd_output);
 }
 
+// -------------------------------------------------- listar as tarefas terminadas ------------------------------------------------- \\
 
-// Listar as tarefas terminadas
 void showTarefasTerminadas() {
 
 	int fd_terminadas = open(TERMINADAS_FD, O_RDONLY, 0600);
@@ -274,11 +274,9 @@ void showTarefasTerminadas() {
 	close(fd_output);
 }
 
+// ------------------------------------------------------ executar uma tarefa ------------------------------------------------------ \\
 
-// Executar uma tarefa
 void executarTarefa (Tarefa *t) {
-
-	//printf("pid pai = %d\n", getpid());
 
 	char ***argv = createExecArray(*t);
 
@@ -294,7 +292,6 @@ void executarTarefa (Tarefa *t) {
 		pipe(t->fds[i]);
 	}
 
-	
 	for (int i = 0; i < t->ncomandos; i++) {
 
 		if ((t->pids[i] = fork()) == 0){
