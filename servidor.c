@@ -12,12 +12,22 @@
 #include "tarefa.h"
 #include "config.h"
 
-static int tempo_inacticidade = 10;
+static int tempo_inactividade = 10;
 static int tempo_execucao = 2;
+static int inact_flag = 0;
 
 
 static Tarefa tarefas[MAX_TAREFAS];
 static int ntarefas = 0;
+
+
+// Handler inatividade
+
+void inactividade_handler (int signum) {
+
+	printf("[HANDLER]\n"); // Debug
+	exit(0);
+}
 
 
 // Handler do tempo de execução
@@ -52,7 +62,7 @@ void timeout_handler (int signum) {
 	}
 
 
-	alarm(1);
+	//alarm(1);
 
 
 }
@@ -100,7 +110,7 @@ int main() {
 
 	signal(SIGCHLD, sigchld_handler);
 	signal(SIGALRM, timeout_handler);
-	alarm(1);
+	//alarm(1);
 
 	while(1) {
 
@@ -131,9 +141,13 @@ int main() {
 
 			if (conf.cmd == CONFIG_INAC_TIME) {
 
-				tempo_inacticidade = conf.option;
-
-
+				if(conf.option > 0){
+					tempo_inactividade = conf.option;
+					inact_flag = 1;
+				}
+				else{
+					inact_flag = 0;
+				}
 
 			}
 
@@ -237,6 +251,29 @@ void showTarefasEmExecucao()
 
 }
 
+// Função semelhante à dup2() mas ativa um alarme enquanto espera pelo read()
+
+void dup_alarm(int fd_in, int fd_out){
+	
+	if(fork() == 0){
+
+		signal(SIGALRM, inactividade_handler);
+
+		char *buf = malloc(sizeof(char)*1024);
+		int num_read;
+
+		while(1){
+			alarm(tempo_inactividade);
+			num_read = read(fd_in, &buf, 1024);
+			write(fd_out, &buf, num_read);
+		}
+	}
+	else
+	{
+		return;
+	}
+	
+}
 
 
 // Executar uma tarefa
@@ -246,7 +283,7 @@ void executarTarefa (Tarefa *t) {
 
 	char ***argv = createExecArray(*t);
 
-	if (signal(SIGALRM, timeout_handler) < 0){
+	if (signal(SIGALRM, timeout_handler) < 0) {
         perror("signal SIGALRM");
         exit(-1);
     }
@@ -255,7 +292,7 @@ void executarTarefa (Tarefa *t) {
 	t->estado = RUNNING;
 
 	// Iniciar os pipes necessários.
-	for (int i = 0; i < t->ncomandos - 1; i++){
+	for (int i = 0; i < t->ncomandos - 1; i++) {
 		pipe(t->fds[i]);
 	}
 
@@ -264,18 +301,31 @@ void executarTarefa (Tarefa *t) {
 
 		if ((t->pids[i] = fork()) == 0){
 
+			signal(SIGALRM, inactividade_handler);
 
 			// Configurar os inputs/outputs de cada processo
 
-			if (i == 0) dup2(t->fds[i][1], 1); // Primeiro processo.
-			
-			else if (i == t->ncomandos - 1) dup2(t->fds[i-1][0], 0); //  Último processo.
+			if (i == 0){
+				//dup2(t->fds[i][1], 1); // Primeiro processo.
+				dup_alarm(t->fds[i][1], 1);
+			}	
 
 			else {
-				// Processos intermédios.
-				dup2(t->fds[i-1][0], 0);  
-				dup2(t->fds[i][1], 1);
+				
+				if (i == t->ncomandos - 1){
+					//dup2(t->fds[i-1][0], 0); //  Último processo.
+					dup_alarm(t->fds[i-1][0], 0);
+				}
+
+				else {
+					// Processos intermédios.
+					//dup2(t->fds[i-1][0], 0);  
+					//dup2(t->fds[i][1], 1);
+					dup_alarm(t->fds[i-1][0], 0);
+					dup_alarm(t->fds[i][1], 1);
+				}
 			}
+
 
 			// Fechar em cada processo os pipes.
 			for (int j = 0; j < t->ncomandos - 1; j++) {
