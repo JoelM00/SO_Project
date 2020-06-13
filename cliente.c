@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
-
 #include <string.h>
 #include <stdlib.h>
 
@@ -12,8 +11,10 @@
 #include "config.h"
 
 
-int main(int argc, char* argv[]) 
-{
+// -------------------------------------------------------------- main ------------------------------------------------------------- \\
+
+int main(int argc, char* argv[]) {
+
 	int i;
 
 	int fd = open("./myfifo",O_WRONLY);

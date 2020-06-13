@@ -168,22 +168,19 @@ int shell(int server) {
 		else if (!strcmp(token,"ajuda")) {
 
 			help();
-
-			readOutput = 1;
 		}
 
 		// Ler output
 
-		sleep(1);
-
 		while (readOutput){
+
+			sleep(1);
 
 			while ((bytesRead = read(fd_output, &outputBuffer, MAX_LINE_SIZE)) > 0){
         		write(1, &outputBuffer, bytesRead);
         	}
 
 			readOutput = 0;
-			write(1, "\n", 2);
 		}	
 	}
 

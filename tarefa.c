@@ -2,20 +2,23 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <math.h>
 
 #include "tarefa.h"
 
 #define MAX 100
 
-char *** createExecArray(Tarefa t)
-{
+
+// -------------------------------------------- criar o array de comandos de uma tarefa -------------------------------------------- \\
+
+char *** createExecArray (Tarefa t){
+
 	int i, j;
 	char ***args, *token, ncomandos = 0;
 
 	args = (char***) malloc(sizeof(char**) * t.ncomandos);
 
 	for (i = 0; i < t.ncomandos; i++) {
+
 		args[i] = (char**) malloc(sizeof(char*) * MAX);
 
 		for (j = 0; j < MAX; j++) {
@@ -41,8 +44,10 @@ char *** createExecArray(Tarefa t)
 	return args;
 }
 
-Tarefa createTarefa(char * line)
-{
+// ----------------------------------------------------- criar uma nova tarefa ----------------------------------------------------- \\
+
+Tarefa createTarefa (char * line){
+
 	Tarefa nova;
 	char *token = strtok(line,"|");
 
@@ -59,9 +64,8 @@ Tarefa createTarefa(char * line)
 	return nova;
 }
 
+// ------------------------------------------------ converter um inteiro para char* ------------------------------------------------ \\
 
-
-// Converte um inteiro para um char*
 char* toString (int n){
 
 	char* buffer = (char*)malloc(MAX * sizeof(char));
@@ -88,41 +92,4 @@ char* toString (int n){
 	return buffer;
 }
 
-
-
-
-
-
-
-
-void showTarefa(Tarefa t) {
-
-	/*char* buffer = toString(t.id);
-	printf("%s\n", buffer);
-	free(buffer);*/
-
-	printf("%s", "#");
-	printf("%d:", t.id);
-	if (t.estado == WAITING) printf(" em espera: ");
-	else if (t.estado == RUNNING) printf(" em execução: ");
-	else if (t.estado == TERMINATED) printf(" concluída: ");
-	else if (t.estado == MAX_INATIVIDADE) printf(" max inactividade: ");
-	else if (t.estado == MAX_EXECUCAO) printf(" max execução: ");
-	for (int i = 0; i < t.ncomandos - 1; i++) {
-		printf("%s|", t.comandos[i]);
-	}
-	printf("%s\n", t.comandos[t.ncomandos - 1]);
-}
-
-
-void showExecArray(char *** array, int n) {
-	int i, j;
-
-	for(i = 0; i < n; i++) {
-
-		for(j = 0; array[i][j]; j++) {
-			printf("%s ", array[i][j]);
-		}
-	}
-}
-
+// --------------------------------------------------------------------------------------------------------------------------------- \\

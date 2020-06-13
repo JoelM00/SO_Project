@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <string.h>
 
 #include "servidor.h"
 #include "tarefa.h"
@@ -24,8 +25,8 @@ static Tarefa tarefas[MAX_TAREFAS];
 static int ntarefas = 0;
 
 
+// --------------------------------------------- remover uma tarefa do array 'tarefas' --------------------------------------------- \\
 
-// Remover uma tarefa do array
 void removeTerminada (int index) {
 
 	for (int i = index; i < ntarefas; i++){
@@ -33,8 +34,8 @@ void removeTerminada (int index) {
 	}
 }
 
+// ------------------------------------------------- handler do tempo de execução -------------------------------------------------- \\
 
-// Handler do tempo de execução
 void timeout_handler (int signum) {
 
 	int i, j;
@@ -61,8 +62,8 @@ void timeout_handler (int signum) {
 	alarm(1);
 }
 
+// ------------------------------------------------------- Handler dos filhos ------------------------------------------------------ \\
 
-// Handler das childs
 void sigchld_handler(int signum) {
 
 	int i, j;
@@ -71,8 +72,8 @@ void sigchld_handler(int signum) {
 	int fd_terminadas = open(TERMINADAS_FD, O_CREAT | O_APPEND | O_WRONLY, 0600);
 
  	pid = wait(&stat);
- 	/*if (WIFEXITED(stat)) printf("Filho %d terminou normalmente! %d\n", pid,WEXITSTATUS(stat));
-	else printf("Filho %d foi morto! %d\n", pid,WEXITSTATUS(stat));*/
+	if (WIFEXITED(stat)) write(1, "Filho terminou normalmente\n", 28);
+	else write(1, "Filho foi morto\n", 17);
 
  	for (i = 0; i < ntarefas; i++) {
 
@@ -92,15 +93,15 @@ void sigchld_handler(int signum) {
     return;
 }
 
+// -------------------------------------------------------------- main ------------------------------------------------------------- \\
 
-// main
 int main() {
 
 	Tarefa t;
 	Config conf;
 	int n, i, j;
 
-	mkfifo("./myfifo", 0600);
+	mkfifo(FIFO_FD, 0600);
 
 	mkfifo(FIFO_FD, 0600);
 	int fd = open(FIFO_FD, O_RDONLY);
@@ -125,6 +126,7 @@ int main() {
 					char* buffer = toString(idTarefa);
 					write(fd_output, "nova Tarefa #", 14);
 					write(fd_output, buffer, sizeof(idTarefa));
+					write(fd_output, "\n", 2);
 					free(buffer);
 					idTarefa++;
 
@@ -134,21 +136,21 @@ int main() {
 
 					executarTarefa(&tarefas[ntarefas-1]);
 				} 
-				else write(1, "Tarefa nao recebida", 20);
+				else write(1, "Tarefa não recebida", 20);
 			}
 
 			// definir o tempo máximo (segundos) de inactividade de comunicação num pipe anónimo
 
 			if (conf.cmd == CONFIG_INAC_TIME) {
 				tempo_inactividade = conf.option;
-				write(fd_output, "tempo de inactividade atualizado", 33);
+				write(fd_output, "tempo de inactividade atualizado\n", 34);
 			}
 
 			// definir o tempo máximo (segundos) de execução de uma tarefa
 
 			if (conf.cmd == CONFIG_EXEC_TIME) {
 				tempo_execucao = conf.option;
-				write(fd_output, "tempo de execução atualizado", 30);
+				write(fd_output, "tempo de execução atualizado\n", 31);
 			}
 
 			// listar tarefas em execução
@@ -188,22 +190,13 @@ int main() {
 	close(fd_output);
 }
 
+// ------------------------------------------- listar as tarefas em execução / em espera ------------------------------------------- \\
 
-// Listar as tarefas em execução e em espera
 void showTarefasEmExecucao () {
 
-	for (int i = 0; i < ntarefas && i < MAX_TAREFAS; i++) {
-		showTarefa(tarefas[i]);
-	}
-}
+	int fd_output = open(OUTPUT_FD, O_CREAT | O_APPEND | O_WRONLY, 0600);
 
-
-// Listar as tarefas terminadas
-void showTarefasTerminadas() {
-
-	int fd = open(TERMINADAS_FD, O_RDONLY, 0600);
-    
-	if (fd < 0){
+	if (fd_output < 0){
         write(1, "error opening file\n", 20);
     }
 	else {
@@ -211,12 +204,74 @@ void showTarefasTerminadas() {
 		Tarefa t;
 		int bytes_read;
 
-		while ((bytes_read = read(fd, &t, sizeof(Tarefa))) > 0){
-			showTarefa(t);
+		for (int i = 0; i < ntarefas; i++){
+
+			Tarefa t = tarefas[i];
+
+			char* buffer = toString(t.id);
+			write(fd_output, "#", 2);
+			write(fd_output, buffer, sizeof(idTarefa));
+			write(fd_output, ", ", 3);
+
+			if (t.estado == WAITING) write(fd_output, "em espera: ", 12);
+			else if (t.estado == RUNNING) write(fd_output, "em execução: ", 14);
+			else if (t.estado == TERMINATED) write(fd_output, "concluída: ", 12);
+			else if (t.estado == MAX_INATIVIDADE) write(fd_output, "max inactividade: ", 19);
+			else if (t.estado == MAX_EXECUCAO) write(fd_output, "max execução: ", 15);
+
+			for (int i = 0; i < t.ncomandos - 1; i++) {
+				write(fd_output, t.comandos[i], strlen(t.comandos[i]) + 1);
+				write(fd_output, "|", 2);
+			}
+
+			write(fd_output, t.comandos[t.ncomandos - 1], strlen(t.comandos[t.ncomandos - 1]) + 1);
+			write(fd_output, "\n", 2);
 		}
 	}
 
-	close(fd);
+	close(fd_output);
+}
+
+
+// Listar as tarefas terminadas
+void showTarefasTerminadas() {
+
+	int fd_terminadas = open(TERMINADAS_FD, O_RDONLY, 0600);
+	int fd_output = open(OUTPUT_FD, O_CREAT | O_APPEND | O_WRONLY, 0600);
+    
+	if (fd_terminadas < 0 || fd_output < 0){
+        write(1, "error opening file\n", 20);
+    }
+	else {
+
+		Tarefa t;
+		int bytes_read;
+
+		while ((bytes_read = read(fd_terminadas, &t, sizeof(Tarefa))) > 0){
+
+			char* buffer = toString(t.id);
+			write(fd_output, "#", 2);
+			write(fd_output, buffer, sizeof(idTarefa));
+			write(fd_output, ", ", 3);
+
+			if (t.estado == WAITING) write(fd_output, "em espera: ", 12);
+			else if (t.estado == RUNNING) write(fd_output, "em execução: ", 14);
+			else if (t.estado == TERMINATED) write(fd_output, "concluída: ", 12);
+			else if (t.estado == MAX_INATIVIDADE) write(fd_output, "max inactividade: ", 19);
+			else if (t.estado == MAX_EXECUCAO) write(fd_output, "max execução: ", 15);
+
+			for (int i = 0; i < t.ncomandos - 1; i++) {
+				write(fd_output, t.comandos[i], strlen(t.comandos[i]) + 1);
+				write(fd_output, "|", 2);
+			}
+
+			write(fd_output, t.comandos[t.ncomandos - 1], strlen(t.comandos[t.ncomandos - 1]) + 1);
+			write(fd_output, "\n", 2);
+		}
+	}
+
+	close(fd_terminadas);
+	close(fd_output);
 }
 
 
