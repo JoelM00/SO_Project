@@ -101,11 +101,9 @@ int main() {
 	int n, i, j;
 
 	mkfifo(FIFO_FD, 0600);
-	mkfifo(OUTPUT_FD, 0600);
 
-	mkfifo(FIFO_FD, 0600);
 	int fd = open(FIFO_FD, O_RDONLY);
-	int fd_terminadas = open(TERMINADAS_FD, O_CREAT | O_APPEND | O_WRONLY, 0600);
+	int fd_terminadas = open(TERMINADAS_FD, O_CREAT | O_RDONLY, 0600);
 	int fd_output = open(OUTPUT_FD, O_CREAT | O_APPEND | O_WRONLY, 0600);
 
 	signal(SIGCHLD, sigchld_handler);
