@@ -32,5 +32,3 @@ void showExecArray(char***, int);
 char* toString (int);
 
 #endif
-
-

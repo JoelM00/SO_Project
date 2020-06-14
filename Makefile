@@ -7,17 +7,17 @@ CC_FLAGS = -Wall -ansi
 # Compilation and linking
 all: argusd argus
 
-argusd: servidor.o tarefa.o config.o
-	$(CC) $(CFLAGS) servidor.o tarefa.o config.o -o argusd
+argusd: argusd.o tarefa.o config.o
+	$(CC) $(CFLAGS) argusd.o tarefa.o config.o -o argusd
 
-argus: cliente.o tarefa.o interpretador.o config.o
-	$(CC) $(CFLAGS) cliente.o tarefa.o interpretador.o config.o -o argus
+argus: argus.o tarefa.o interpretador.o config.o
+	$(CC) $(CFLAGS) argus.o tarefa.o interpretador.o config.o -o argus
 
-servidor.o: servidor.c servidor.h
-	$(CC) $(CFLAGS) -c servidor.c
+argusd.o: argusd.c argusd.h argus.h
+	$(CC) $(CFLAGS) -c argusd.c
 
-cliente.o: cliente.c
-	$(CC) $(CFLAGS) -c cliente.c
+argus.o: argus.c argus.h
+	$(CC) $(CFLAGS) -c argus.c
 
 tarefa.o: tarefa.c tarefa.h
 	$(CC) $(CFLAGS) -c tarefa.c

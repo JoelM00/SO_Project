@@ -8,9 +8,10 @@
 #include <sys/wait.h>
 #include <string.h>
 
-#include "servidor.h"
+#include "argusd.h"
 #include "tarefa.h"
 #include "config.h"
+#include "argus.h"
 
 #define FIFO_FD "myfifo"
 #define TERMINADAS_FD "terminadas"
