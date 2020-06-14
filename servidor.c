@@ -18,6 +18,7 @@
 
 static int tempo_inactividade = 10;
 static int tempo_execucao = 10;
+static int inact_flag = 0;
 
 static int idTarefa = 0;
 
@@ -32,6 +33,36 @@ void removeTerminada (int index) {
 	for (int i = index; i < ntarefas; i++){
         tarefas[i] = tarefas[i+1];
 	}
+}
+
+// ------------------------------------------------- handler do tempo de inatividade -------------------------------------------------- \\
+
+void inactividade_handler (int signum) {
+
+	//printf("[INACTIVIDADE_HANDLER]\n"); // Debug
+
+	int i, j;
+
+	for (i = 0; i < ntarefas; i++) {
+
+		if (tarefas[i].estado == RUNNING) {
+
+			for (j = 0; j < tarefas[i].ncomandos; j++) {
+				//printf("ncomandos: %d\n", tarefas[i].ncomandos);
+				//printf("pids: %d\n", tarefas[i].pids[j]);
+
+				if (tarefas[i].pids[j] > 0) {
+					write(1, "A matar tarefa\n", 15);
+					kill(tarefas[i].pids[j], SIGKILL);
+				}
+			}
+
+			tarefas[i].estado = MAX_INATIVIDADE;
+			write(1, "Tarefa terminada\n", 18);
+		}
+	}
+
+	exit(-1);
 }
 
 // ------------------------------------------------- handler do tempo de execução -------------------------------------------------- \\
@@ -139,7 +170,14 @@ int main() {
 			// definir o tempo máximo (segundos) de inactividade de comunicação num pipe anónimo
 
 			if (conf.cmd == CONFIG_INAC_TIME) {
-				tempo_inactividade = conf.option;
+				if(conf.option > 0){
+					tempo_inactividade = conf.option;
+					inact_flag = 1;
+				}
+				else{
+					inact_flag = 0;
+				}
+
 				write(fd_output, "tempo de inactividade atualizado\n", 34);
 			}
 
@@ -271,6 +309,32 @@ void showTarefasTerminadas() {
 	close(fd_output);
 }
 
+/*
+ * Função que simula o comportamento de dup2() mas ativa um alarme enquanto espera pelo read()
+ * Usada para detetar a atividade de um pipe
+ */
+
+void dup_alarm(int fd_in, int fd_out){
+	
+	if(fork() == 0){
+
+		signal(SIGALRM, inactividade_handler);
+
+		char *buf = malloc(sizeof(char)*1024);
+		int num_read;
+
+		while(1){
+			alarm(tempo_inactividade);
+			num_read = read(fd_in, &buf, 1024);
+			write(fd_out, &buf, num_read);
+		}
+	}
+	else
+	{
+		return;
+	}
+}
+
 // ------------------------------------------------------ executar uma tarefa ------------------------------------------------------ \\
 
 void executarTarefa (Tarefa *t) {
@@ -295,14 +359,14 @@ void executarTarefa (Tarefa *t) {
 
 			// Configurar os inputs/outputs de cada processo
 
-			if (i == 0) dup2(t->fds[i][1], 1); // Primeiro processo.
+			if (i == 0) dup_alarm(t->fds[i][1], 1); // Primeiro processo.
 			
-			else if (i == t->ncomandos - 1) dup2(t->fds[i-1][0], 0); //  Último processo.
+			else if (i == t->ncomandos - 1) dup_alarm(t->fds[i-1][0], 0); //  Último processo.
 
 			else {
 				// Processos intermédios.
-				dup2(t->fds[i-1][0], 0);  
-				dup2(t->fds[i][1], 1);
+				dup_alarm(t->fds[i-1][0], 0);  
+				dup_alarm(t->fds[i][1], 1);
 			}
 
 			// Fechar em cada processo os pipes.
