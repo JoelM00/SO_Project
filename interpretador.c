@@ -80,7 +80,7 @@ int shell(int server) {
 	int bytesRead;
     char outputBuffer[MAX_LINE_SIZE];
 
-	if ((fd_output = open(OUTPUT_FD, O_CREAT, O_RDONLY)) == -1){
+	if ((fd_output = open(OUTPUT_FD, O_RDONLY | O_CREAT)) == -1){
         perror("error opening output file");
 		return -1;
 	}
