@@ -1,19 +1,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "tarefa.h"
 
 #define MAX 100
 
-char *** createExecArray(Tarefa t)
-{
+
+// -------------------------------------------- criar o array de comandos de uma tarefa -------------------------------------------- \\
+
+char *** createExecArray (Tarefa t){
+
 	int i, j;
 	char ***args, *token, ncomandos = 0;
 
 	args = (char***) malloc(sizeof(char**) * t.ncomandos);
 
 	for (i = 0; i < t.ncomandos; i++) {
+
 		args[i] = (char**) malloc(sizeof(char*) * MAX);
 
 		for (j = 0; j < MAX; j++) {
@@ -39,8 +44,10 @@ char *** createExecArray(Tarefa t)
 	return args;
 }
 
-Tarefa createTarefa(char * line)
-{
+// ----------------------------------------------------- criar uma nova tarefa ----------------------------------------------------- \\
+
+Tarefa createTarefa (char * line){
+
 	Tarefa nova;
 	char *token = strtok(line,"|");
 
@@ -57,33 +64,36 @@ Tarefa createTarefa(char * line)
 	return nova;
 }
 
+// ------------------------------------------------ converter um inteiro para char* ------------------------------------------------ \\
 
-void showTarefa(Tarefa t) 
-{
-	int i, j;
+char* toString (int n){
 
-	printf("ID:%d Estado=%d ", t.id, t.estado);
+	char buffer[10];
+	char number[10];
+	char* result;
 
-	for (i = 0; i < t.ncomandos; i++) {
+	if (n == 0){ 
+		result = "0";
+	} 
+	else {
 
-		printf("%s [%d]", t.comandos[i], t.pids[i]);
-		
-		if (i < t.ncomandos - 1) printf(">");
-	}
+		int size = 0;
 
-	printf("\n");
-}
-
-
-void showExecArray(char *** array, int n)
-{
-	int i, j;
-
-	for(i = 0; i < n; i++) {
-
-		for(j = 0; array[i][j]; j++) {
-			printf("%s ", array[i][j]);
+		for (int x = n; x != 0; x /= 10){
+			buffer[size] = (x % 10) + '0';
+			size++;
 		}
-	}
-}
 
+		int count = 0;
+
+		for (int i = size - 1; i >= 0; i--){
+			number[count] = buffer[i]; 
+			count++;
+		}
+
+		number[count] = '\0';
+		result = number;
+	}
+
+	return result;
+}

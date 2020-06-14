@@ -4,9 +4,10 @@
 #define MAX_COMANDOS 10
 #define MAX_COMANDO_SIZE 255
 
-typedef enum {WAITING, RUNNING, TERMINATED} Estado;
+typedef enum { WAITING, RUNNING, TERMINATED, MAX_INATIVIDADE, MAX_EXECUCAO } Estado;
 
 typedef struct _TAREFA_ {
+	
 	int id; // ID da tarefa
 
 	char comandos[MAX_COMANDOS][MAX_COMANDO_SIZE]; // Comandos a executar
@@ -23,11 +24,12 @@ typedef struct _TAREFA_ {
 } Tarefa;
 
 Tarefa createTarefa(char *);
-void showTarefa(Tarefa);
+void showTarefa(Tarefa, char*);
 
 char *** createExecArray(Tarefa);
 void showExecArray(char***, int);
 
+char* toString (int);
 
 #endif
 
