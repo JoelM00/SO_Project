@@ -103,7 +103,7 @@ int main() {
 	mkfifo(FIFO_FD, 0600);
 
 	int fd = open(FIFO_FD, O_RDONLY);
-	int fd_terminadas = open(TERMINADAS_FD, O_CREAT | O_RDONLY, 0600);
+	int fd_terminadas = open(TERMINADAS_FD, O_CREAT, 0600);
 	int fd_output = open(OUTPUT_FD, O_CREAT | O_APPEND | O_WRONLY, 0600);
 
 	signal(SIGCHLD, sigchld_handler);
@@ -123,9 +123,8 @@ int main() {
 					t.id = idTarefa;
 					char* buffer = toString(idTarefa);
 					write(fd_output, "nova Tarefa #", 14);
-					write(fd_output, buffer, sizeof(idTarefa));
+					write(fd_output, buffer, sizeof(buffer));
 					write(fd_output, "\n", 2);
-					free(buffer);
 					idTarefa++;
 
 					t.estado = WAITING;
@@ -192,7 +191,7 @@ int main() {
 
 void showTarefasEmExecucao () {
 
-	int fd_output = open(OUTPUT_FD, O_CREAT | O_APPEND | O_WRONLY, 0600);
+	int fd_output = open(OUTPUT_FD, O_APPEND | O_WRONLY, 0600);
 
 	if (fd_output < 0){
         write(1, "error opening file\n", 20);
@@ -235,7 +234,7 @@ void showTarefasEmExecucao () {
 void showTarefasTerminadas() {
 
 	int fd_terminadas = open(TERMINADAS_FD, O_RDONLY, 0600);
-	int fd_output = open(OUTPUT_FD, O_CREAT | O_APPEND | O_WRONLY, 0600);
+	int fd_output = open(OUTPUT_FD, O_APPEND | O_WRONLY, 0600);
     
 	if (fd_terminadas < 0 || fd_output < 0){
         write(1, "error opening file\n", 20);

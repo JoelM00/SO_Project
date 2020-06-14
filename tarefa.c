@@ -68,26 +68,32 @@ Tarefa createTarefa (char * line){
 
 char* toString (int n){
 
-	char* buffer = (char*)malloc(MAX * sizeof(char));
+	char buffer[10];
+	char number[10];
+	char* result;
 
-	if (n == 0) {
-		char c = '0';
-		strncat(buffer, &c, 1);
-	}
+	if (n == 0){ 
+		result = "0";
+	} 
 	else {
 
-		char number[5];
 		int size = 0;
 
 		for (int x = n; x != 0; x /= 10){
-			number[size] = (x % 10) + '0';
+			buffer[size] = (x % 10) + '0';
 			size++;
 		}
 
+		int count = 0;
+
 		for (int i = size - 1; i >= 0; i--){
-			strncat(buffer, &(number[i]), 1);
+			number[count] = buffer[i]; 
+			count++;
 		}
+
+		number[count] = '\0';
+		result = number;
 	}
 
-	return buffer;
+	return result;
 }
